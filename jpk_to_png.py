@@ -139,7 +139,7 @@ if __name__ == "__main__":
         zs = np.clip(gaussian_filter(zf, SMOOTH_PX) - lo, 0, None)
         um = meta["ulen"] * 1e6
         bar = 5 if um > 10 else 1
-        fig, ax = plt.subplots(figsize=(4.2, 3.4), dpi=300)
+        fig, ax = plt.subplots(figsize=(4.2, 3.4), dpi=400)
         im = ax.imshow(zs, cmap="afmhot", vmin=0, vmax=hi - lo,
                        extent=[0, um, 0, um], origin="lower", interpolation="nearest")
         ax.set_xticks([]); ax.set_yticks([])
