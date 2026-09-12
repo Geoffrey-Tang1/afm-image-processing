@@ -87,6 +87,33 @@ Tune at the top of `__main__`:
 
 Set `VMED_WEIGHT = 0` and `SMOOTH_PX = 0` for unfiltered output.
 
+## Line profiles
+
+`line_profiles.py` takes random line profiles across the same images:
+
+```bash
+python3 line_profiles.py                      # 3 profiles per .jpk here
+python3 line_profiles.py data -n 5            # 5 per image
+python3 line_profiles.py data --match porous  # only matching file names
+python3 line_profiles.py data --raw           # skip the display filters
+```
+
+Each profile is a whole scan row, which is how an AFM acquires the data in
+the first place — no interpolation, and no mixing of adjacent lines. Row
+positions are drawn from a seed derived from the file name, so a re-run
+reproduces the same lines; `--seed N` draws a different set.
+
+Into a `Profiles/` subfolder it writes, per image, a `_linemap.png` showing
+where the lines were taken (greyscale, with the lines drawn in colour and
+numbered, so the height maps stay clean) and a `_profiles.png` of the traces
+themselves. Lines within one image are lightness steps of one hue rather than
+dashed variants of one colour. Two CSVs cover the whole batch: every sampled
+point, and one row per line with mean, Rq, Ra and peak-to-valley.
+
+Profiles carry the same zero reference as the height map's colour bar, so the
+two can be read against each other, and they are deliberately not clipped at
+zero — clipping would draw a flat floor that is not in the data.
+
 ## Limitations
 
 Tip-shape artefacts are not corrected. A blunt or contaminated tip that

@@ -116,6 +116,8 @@ if __name__ == "__main__":
     import sys, os, glob, matplotlib
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
+    import matplotlib.patheffects as pe
+    from matplotlib.patches import Rectangle
     plt.rcParams["font.family"] = "sans-serif"
     plt.rcParams["font.sans-serif"] = ["Helvetica", "Nimbus Sans", "Arial", "Liberation Sans"]
 
@@ -139,14 +141,17 @@ if __name__ == "__main__":
         zs = np.clip(gaussian_filter(zf, SMOOTH_PX) - lo, 0, None)
         um = meta["ulen"] * 1e6
         bar = 5 if um > 10 else 1
-        fig, ax = plt.subplots(figsize=(4.2, 3.4), dpi=300)
+        fig, ax = plt.subplots(figsize=(4.2, 3.4), dpi=400)
         im = ax.imshow(zs, cmap="afmhot", vmin=0, vmax=hi - lo,
                        extent=[0, um, 0, um], origin="lower", interpolation="nearest")
         ax.set_xticks([]); ax.set_yticks([])
         for s in ax.spines.values(): s.set_linewidth(0.8)
-        ax.plot([um*0.06, um*0.06+bar], [um*0.07]*2, lw=4.5, color="w", solid_capstyle="butt")
+        ax.add_patch(Rectangle((um*0.06, um*0.062), bar, um*0.017,
+                               facecolor="w", edgecolor="k", linewidth=1.8,
+                               joinstyle="miter", zorder=5))
         ax.text(um*0.06+bar/2, um*0.125, "%g \u03bcm" % bar, color="w",
-                ha="center", va="bottom", fontsize=11, weight="bold")
+                ha="center", va="bottom", fontsize=11, weight="bold",
+                path_effects=[pe.withStroke(linewidth=1.8, foreground="k")])
         cb = fig.colorbar(im, ax=ax, fraction=0.046, pad=0.03)
         cb.set_label("Height (nm)", fontsize=10); cb.ax.tick_params(labelsize=9)
         fig.tight_layout()
