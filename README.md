@@ -12,7 +12,7 @@ image stack can be decoded and rendered with nothing but `tifffile`,
 ## Install
 
 ```bash
-pip install tifffile numpy scipy matplotlib
+pip install tifffile numpy scipy matplotlib scikit-image   # scikit-image: domain_pore_analysis.py only
 ```
 
 Helvetica is used when available and falls back to Nimbus Sans / Arial /
@@ -113,6 +113,54 @@ point, and one row per line with mean, Rq, Ra and peak-to-valley.
 Profiles carry the same zero reference as the height map's colour bar, so the
 two can be read against each other, and they are deliberately not clipped at
 zero — clipping would draw a flat floor that is not in the data.
+
+## Domain and pore analysis
+
+`domain_pore_analysis.py` measures the roughness of pure films, the domains
+of blend films and the pores of porous films (left after the domains are
+dissolved) in 20 µm × 20 µm height images:
+
+```bash
+python3 domain_pore_analysis.py pure   --preset deep    scans/*pure*.jpk
+python3 domain_pore_analysis.py blend  --preset deep    scans/*blend*.jpk
+python3 domain_pore_analysis.py porous --preset shallow scans/*porous*.jpk --deq 27.0 26.0 27.3 --png
+```
+
+1. **Background.** Plane and per-line first-order fits computed only on the
+   continuous matrix: the domains or pores (Otsu threshold) are excluded
+   together with a margin around them (`--margin`), which also keeps raised
+   rims around the features out of the reference. Pure films use a
+   second-order background and exclude surface particles (higher than the
+   median + 6 robust standard deviations). The median height of the
+   reference surface is set to 0 nm.
+2. **Objects.** Domains: pixels above the Otsu threshold. Pores: every
+   pixel more than `--rim` nm below the film surface that is connected to a
+   pixel more than `--seed` nm below it. Touching pores are separated by a
+   marker-controlled watershed with one marker per height minimum at least
+   `--split` nm deep, so two pores are split only when each has its own floor.
+3. **Numbers.** S_q; for every object not touching the image border, the
+   equivalent circular diameter D_eq = 2(A/π)^1/2 (area-weighted mean and
+   median). For pores: the depth of each pore (5th percentile of its height),
+   the pore depth t (median over the pores with D_eq ≥ 150 nm, wide enough
+   for the tip to reach the floor), the pore volume V_pore and the porosity
+   V_pore/(A t) and, with the film thickness d_eq from `--deq`,
+   V_pore/(A (d_eq + V_pore/A)). Errors are standard deviations over the
+   3 × 3 sub-areas of the image (t: over the pores).
+
+Results are appended to `domain_pore_summary_<film>.csv`, one row per image;
+`--png` writes `<name>_segmentation.png` with the objects outlined in cyan
+and the watershed lines in white.
+
+Two parameter sets are built in; any value can be overridden on the command
+line.
+
+| Preset | Use for | `--margin` (nm) | `--rim` (nm) | `--seed` (nm) | `--split` (nm) |
+| --- | --- | --- | --- | --- | --- |
+| `deep` | pores about 70 nm deep, raised rims around the features | 400 | 10 | 40 | 10 |
+| `shallow` | pores about 20 nm deep | 80 | 5 | 10 | 5 |
+
+For other films, keep `--rim` and `--seed` well below the pore depth and make
+`--margin` wide enough to cover any raised rim around the features.
 
 ## Limitations
 
